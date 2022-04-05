@@ -69,8 +69,33 @@ CREATE TABLE IF NOT EXISTS drivers (
     _id serial PRIMARY KEY,
 	firstName varchar ( 50 ) NOT NULL,
 	lastName varchar ( 50 ) NOT NULL,
+	phone varchar ( 50 ) NOT NULL,
+	email varchar ( 50 ) NOT NULL,
 	addedBy INTEGER REFERENCES admins(_id),
     added TIMESTAMP NOT NULL,
     lastModified TIMESTAMP NOT NULL,
     modifiedBy INTEGER REFERENCES admins(_id)
+);
+
+INSERT INTO drivers
+	(firstName, lastName, phone, email, addedBy, added, lastModified, modifiedBy)
+VALUES (
+	'Grzegorz', 'Brzęszyczykiewicz', '1234566778', 'a@a.com', 1, now(), now(), 1
+);
+
+INSERT INTO drivers
+	(firstName, lastName, phone, email, addedBy, added, lastModified, modifiedBy)
+VALUES (
+	'John', 'Doe', '987654321', 'asdf@asdf.com', 1, now(), now(), 1
+);
+INSERT INTO drivers
+	(firstName, lastName, phone, email, addedBy, added, lastModified, modifiedBy)
+VALUES (
+	'Random', 'Dude','1122334455', 'qwert@asdad.com', 1, now(), now(), 1
+);
+
+INSERT INTO drivers
+	(firstName, lastName, phone, email, addedBy, added, lastModified, modifiedBy)
+VALUES (
+	'Foo', 'Bar','8877665544', 'example@domain.com', 1, now(), now(), 1
 );

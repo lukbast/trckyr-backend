@@ -44,11 +44,22 @@ async def root():
 
 @app.get("/cargos")
 async def get_cargos():
-    curr = await db.fetch_all(
+    data = await db.fetch_all(
         "SELECT cargos._id, cargos.name, weight, weightUnit, quantity, "
         "quantityUnit, info, who_added.name as addedBy, cargos.added,  "
         "lastModified, who_mod.name as modifiedBy FROM cargos "
         "JOIN admins as who_added ON cargos.addedBy = who_added._id "
         "JOIN admins as who_mod ON cargos.modifiedBy = who_mod._id;")
 
-    return {"data": curr}
+    return {"data": data}
+
+
+@app.get("/drivers")
+async def get_drivers():
+    data = await db.fetch_all(
+        "SELECT drivers._id, firstname, lastname, who_added.name as addedby, added, "
+        "lastmodified, phone, email, who_mod.name as modifiedby FROM drivers "
+        "JOIN admins AS who_added ON drivers.addedBy = who_added._id "
+        "JOIN admins AS who_mod ON drivers.modifiedBy = who_mod._id;")
+
+    return {"data": data}

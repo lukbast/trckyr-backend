@@ -7,6 +7,9 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app_data
+    volumes:
+      - ./resources/db-seed.sql:/docker-entrypoint-initdb.d/db-seed.sql
   postgresAdmin:
     image: dpage/pgadmin4:latest
     ports:
@@ -21,7 +24,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      POSTGRES_URL: postgres
-      PORT: 5432
+      POSTGRES_URL: "postgres"
+      PORT: "5432"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "app_data"
     volumes:
       - ./:/src/

@@ -99,3 +99,74 @@ INSERT INTO drivers
 VALUES (
 	'Foo', 'Bar','8877665544', 'example@domain.com', 1, now(), now(), 1
 );
+
+CREATE TABLE IF NOT EXISTS statuses (
+    _id serial PRIMARY KEY,
+    transportID integer NOT NULL,
+    state varchar ( 200 ) NOT NULL,
+	begginingOfState TIMESTAMP NOT NULL,
+	endOfState TIMESTAMP,
+    duration varchar ( 100 ),
+	remaining integer NOT NULL,
+    eta varchar ( 100 ) NOT NULL,
+    coordinates float[] NOT NULL
+);
+
+INSERT INTO statuses
+	( transportID,state, begginingOfState, endOfState, duration, remaining, eta, coordinates)
+VALUES (
+	1, 'Waiting for dispatch', now(), now(), '0 days 17 hrs 0 mins', 1234, 'Unknown', '{52.254717669337616, 21.015183348860532}'
+);
+INSERT INTO statuses
+	( transportID,state, begginingOfState, endOfState, duration, remaining, eta, coordinates)
+VALUES (
+	1, 'Moving', now(), now(), '0 days 17 hrs 0 mins', 1234, '0 days 16 hrs 13mins', '{52.254717669337616, 21.015183348860532}'
+);
+INSERT INTO statuses
+	( transportID,state, begginingOfState, endOfState, duration, remaining, eta, coordinates)
+VALUES (
+	1, 'Break to sleep', now(), now(), '0 days 17 hrs 0 mins', 1234, '0 days 16 hrs 13mins', '{52.254717669337616, 21.015183348860532}'
+);
+INSERT INTO statuses
+	( transportID,state, begginingOfState, endOfState, duration, remaining, eta, coordinates)
+VALUES (
+	1, 'Moving', now(), null, null, 1234, '0 days 16 hrs 13mins', '{52.254717669337616, 21.015183348860532}'
+);
+
+INSERT INTO statuses
+	( transportID,state, begginingOfState, endOfState, duration, remaining, eta, coordinates)
+VALUES (
+	2, 'Waiting for dispatch', now(), now(), '0 days 17 hrs 0 mins', 1234, 'Unknown', '{52.254717669337616, 21.015183348860532}'
+);
+
+
+CREATE TABLE IF NOT EXISTS transports (
+    _id serial PRIMARY KEY,
+    name varchar ( 200 ) NOT NULL,
+    from_ varchar ( 100 ) NOT NULL,
+    to_ varchar ( 100 ) NOT NULL,
+    drivers integer[] NOT NULL,
+    cargo integer NOT NULL,
+    total integer,
+    state varchar ( 100 ) NOT NULL,
+	addedBy INTEGER REFERENCES admins(_id),
+    added TIMESTAMP NOT NULL,
+    lastModified TIMESTAMP NOT NULL,
+    modifiedBy INTEGER REFERENCES admins(_id)
+);
+
+INSERT INTO transports
+	( name, from_, to_, drivers, cargo, total, state, addedby, added, lastmodified, modifiedby)
+VALUES (
+	'Cars', 'UK, London', 'Poland, Warsaw',
+	'{2 , 1}', 1, 1234, 'In progress', 1, now(), now(), 1
+);
+
+INSERT INTO transports
+	( name, from_, to_, drivers, cargo, total, state, addedby, added, lastmodified, modifiedby)
+VALUES (
+	'Chocolate bars for babushka', 'UK, London', 'Poland, Warsaw',
+	'{0 , 1}', 3, 1234, 'In progress', 1, now(), now(), 1
+);
+
+

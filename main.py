@@ -63,3 +63,23 @@ async def get_drivers():
         "JOIN admins AS who_mod ON drivers.modifiedBy = who_mod._id;")
 
     return {"data": data}
+
+
+@app.get("/transports")
+async def get_transports():
+    trans = await db.fetch_all(
+        "SELECT t._id, t.name, from_, to_, drivers, cargo, "
+        "total, t.state, who_added.name as addedby, added, lastmodified, who_mod.name as modifiedby "
+        "FROM transports as t "
+        "JOIN admins AS who_added ON t.addedBy = who_added._id "
+        "JOIN admins AS who_mod ON t.modifiedBy = who_mod._id;"
+    )
+    data = []
+    for t in trans:
+        t = dict(t)
+        values = [{"id": t['_id']}]
+        statuses = await db.fetch_all(
+            f"SELECT * FROM statuses WHERE transportid = {t['_id']}")
+        t["statuses"] = statuses
+        data.append(t)
+    return {"data": data}

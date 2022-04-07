@@ -19,7 +19,7 @@ class AuthHandler:
 
     def encode_token(self, user_id):
         payload = {
-            'exp': datetime.utcnow() + timedelta(days=0, minutes=30),
+            'exp': datetime.utcnow() + timedelta(days=0, minutes=60),
             'iat': datetime.utcnow(),
             'sub': user_id
         }
@@ -34,7 +34,8 @@ class AuthHandler:
             payload = jwt.decode(token, self.secret, algorithms=['HS256'])
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail='Signature has expired')
+            self.users.pop(token, None)
+            raise HTTPException(status_code=440, detail='Signature has expired')
         except jwt.InvalidTokenError as e:
             raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -44,7 +45,9 @@ class AuthHandler:
     def remove_session(self, key):
         self.users.pop(key, None)
 
+    def get_session(self, key):
+        return self.users.get(key, None)
+
     def auth_wrapper(self, auth: HTTPAuthorizationCredentials = Security(security)):
-        print(auth)
-        print(auth.credentials)
-        return self.decode_token(auth.credentials)
+        self.decode_token(auth.credentials)
+        return auth.credentials

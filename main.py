@@ -1,8 +1,10 @@
 from os import getenv
 from fastapi import FastAPI, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+
 import databases
 from auth import AuthHandler
+
 
 def create_db_url(host: str, port: str, db_name: str, user: str,
                   password: str):
@@ -25,8 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-users = dict()
 
 
 @app.on_event("startup")
@@ -64,15 +64,31 @@ async def login(username: str = Form(""), password: str = Form("")):
         if hashed_password == user.get('password'):
             token = auth_handler.encode_token(username)
             auth_handler.create_session(token, user.get('_id'))
-            # here send success login response
-            res = "password are the same"
-            return {'token': token}
-    else:
-        raise HTTPException(status_code=401, detail='Invalid username and/or password.')
+            return {'token': token, 'username': user.get('name')}
+
+    raise HTTPException(status_code=401, detail='Invalid username and/or password.')
+
+
+@app.get("/user/login", status_code=200)
+async def loginWithSession(token=Depends(auth_handler.auth_wrapper)):
+    session = auth_handler.get_session(token)
+    if session:
+        return {'session': True}
+
+    raise HTTPException(status_code=440, detail='Session has ben expired')
+
+
+@app.post("/user/logout", status_code=200)
+async def logout(token=Depends(auth_handler.auth_wrapper)):
+    auth_handler.remove_session(token)
+    return {"logged_out": True}
 
 
 @app.get("/cargos")
-async def get_cargos(username=Depends(auth_handler.auth_wrapper)):
+async def get_cargos(token=Depends(auth_handler.auth_wrapper)):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+
     data = await db.fetch_all(
         "SELECT cargos._id, cargos.name, weight, weightUnit, quantity, "
         "quantityUnit, info, who_added.name as addedBy, cargos.added,  "
@@ -84,7 +100,10 @@ async def get_cargos(username=Depends(auth_handler.auth_wrapper)):
 
 
 @app.get("/drivers")
-async def get_drivers(username=Depends(auth_handler.auth_wrapper)):
+async def get_drivers(token= Depends(auth_handler.auth_wrapper)):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+
     data = await db.fetch_all(
         "SELECT drivers._id, firstname, lastname, who_added.name as addedby, added, "
         "lastmodified, phone, email, who_mod.name as modifiedby FROM drivers "
@@ -95,7 +114,10 @@ async def get_drivers(username=Depends(auth_handler.auth_wrapper)):
 
 
 @app.get("/transports")
-async def get_transports(username=Depends(auth_handler.auth_wrapper)):
+async def get_transports(token=Depends(auth_handler.auth_wrapper)):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+
     trans = await db.fetch_all(
         "SELECT t._id, t.name, from_, to_, drivers, cargo, "
         "total, t.state, who_added.name as addedby, added, lastmodified, who_mod.name as modifiedby "

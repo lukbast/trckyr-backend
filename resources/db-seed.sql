@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS admins (
 	created TIMESTAMP NOT NULL
 );
 
-INSERT INTO admins (name, password, created) VALUES ('TEST ACCOUNT', 'test', now());
+INSERT INTO admins (name, password, created) VALUES ('test', '$2b$12$rkllomdfhjfbnvgkfmavuepV5xkmsQB7CO0jtg1qYKBRVVmz2Hr9q', now());
 
 
 CREATE TABLE IF NOT EXISTS cargos (

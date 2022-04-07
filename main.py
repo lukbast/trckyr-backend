@@ -1,8 +1,8 @@
 from os import getenv
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import databases
-
+from auth import AuthHandler
 
 def create_db_url(host: str, port: str, db_name: str, user: str,
                   password: str):
@@ -16,7 +16,7 @@ DB_URL = create_db_url(getenv("POSTGRES_URL"),
                        getenv("POSTGRES_USER"),
                        getenv("POSTGRES_PASSWORD"))
 db = databases.Database(DB_URL)
-
+auth_handler = AuthHandler()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +25,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+users = dict()
 
 
 @app.on_event("startup")
@@ -42,8 +44,35 @@ async def root():
     return {"test": "I AM WORKING!"}
 
 
+@app.post("/user/register", status_code=201)
+async def register(username: str = Form(""), password: str = Form("")):
+    hashed_password = auth_handler.get_password_hash(password)
+    query = 'INSERT INTO admins(name, password, created) VALUES (:name, :password, now())'
+    values = {'name': username, "password": hashed_password}
+    await db.execute(query=query, values=values)
+    return {"test": "I'M WORKING"}
+
+
+@app.post("/user/login", status_code=200)
+async def login(username: str = Form(""), password: str = Form("")):
+    query = 'SELECT * FROM admins WHERE name = :username'
+    values = {'username': username}
+    user = await db.fetch_one(query=query, values=values)
+    hashed_password = auth_handler.get_password_hash(password)
+
+    if user:
+        if hashed_password == user.get('password'):
+            token = auth_handler.encode_token(username)
+            auth_handler.create_session(token, user.get('_id'))
+            # here send success login response
+            res = "password are the same"
+            return {'token': token}
+    else:
+        raise HTTPException(status_code=401, detail='Invalid username and/or password.')
+
+
 @app.get("/cargos")
-async def get_cargos():
+async def get_cargos(username=Depends(auth_handler.auth_wrapper)):
     data = await db.fetch_all(
         "SELECT cargos._id, cargos.name, weight, weightUnit, quantity, "
         "quantityUnit, info, who_added.name as addedBy, cargos.added,  "
@@ -55,7 +84,7 @@ async def get_cargos():
 
 
 @app.get("/drivers")
-async def get_drivers():
+async def get_drivers(username=Depends(auth_handler.auth_wrapper)):
     data = await db.fetch_all(
         "SELECT drivers._id, firstname, lastname, who_added.name as addedby, added, "
         "lastmodified, phone, email, who_mod.name as modifiedby FROM drivers "
@@ -66,7 +95,7 @@ async def get_drivers():
 
 
 @app.get("/transports")
-async def get_transports():
+async def get_transports(username=Depends(auth_handler.auth_wrapper)):
     trans = await db.fetch_all(
         "SELECT t._id, t.name, from_, to_, drivers, cargo, "
         "total, t.state, who_added.name as addedby, added, lastmodified, who_mod.name as modifiedby "

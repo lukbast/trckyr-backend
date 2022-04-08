@@ -3,6 +3,7 @@ from fastapi import FastAPI, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 import databases
+import sql_queries
 from auth import AuthHandler
 
 
@@ -89,27 +90,55 @@ async def get_cargos(token=Depends(auth_handler.auth_wrapper)):
     if not auth_handler.get_session(token):
         raise HTTPException(status_code=440, detail='Session has expired')
 
-    data = await db.fetch_all(
-        "SELECT cargos._id, cargos.name, weight, weightUnit, quantity, "
-        "quantityUnit, info, who_added.name as addedBy, cargos.added,  "
-        "lastModified, who_mod.name as modifiedBy FROM cargos "
-        "JOIN admins as who_added ON cargos.addedBy = who_added._id "
-        "JOIN admins as who_mod ON cargos.modifiedBy = who_mod._id;")
+    data = await db.fetch_all(sql_queries.GET_CARGOS)
 
     return {"data": data}
 
 
-@app.get("/drivers")
-async def get_drivers(token= Depends(auth_handler.auth_wrapper)):
+@app.post("/cargos")
+async def new_cargo(token=Depends(auth_handler.auth_wrapper),
+                    name: str = Form(''),
+                    weight: int = Form(0), weightunit: str = Form(''),
+                    quantity: int = Form(0), quantityunit: str = Form(''),
+                    info: str = Form(0)
+                    ):
     if not auth_handler.get_session(token):
         raise HTTPException(status_code=440, detail='Session has expired')
 
-    data = await db.fetch_all(
-        "SELECT drivers._id, firstname, lastname, who_added.name as addedby, added, "
-        "lastmodified, phone, email, who_mod.name as modifiedby FROM drivers "
-        "JOIN admins AS who_added ON drivers.addedBy = who_added._id "
-        "JOIN admins AS who_mod ON drivers.modifiedBy = who_mod._id;")
+    uid = auth_handler.get_session(token)
 
+    values = {"name": name, "wth": weight, "wunit": weightunit,
+              "qty": quantity, "qunit": quantityunit, "info": info, "uid": uid}
+    await db.execute(query=sql_queries.NEW_CARGO, values=values)
+    data = await db.fetch_all(sql_queries.GET_CARGOS)
+    return {"data": data}
+
+
+@app.get("/drivers")
+async def get_drivers():
+    # token = auth_handler.auth_wrapper
+    # if not auth_handler.get_session(token):
+    #     raise HTTPException(status_code=440, detail='Session has expired')
+
+    data = await db.fetch_all(sql_queries.GET_DRIVERS)
+
+    return {"data": data}
+
+
+@app.post("/drivers")
+async def new_driver(token= Depends(auth_handler.auth_wrapper),
+                     firstname: str = Form(''),
+                     lastname: str = Form(''),
+                     phone: str = Form(''),
+                     email: str = Form('')
+                     ):
+
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+    uid = auth_handler.get_session(token)
+    values = {"fname": firstname, "lname": lastname, "ph": phone, "email": email, "uid": uid}
+    await db.execute(query=sql_queries.NEW_DRIVER, values=values)
+    data = await db.fetch_all(sql_queries.GET_DRIVERS)
     return {"data": data}
 
 
@@ -118,13 +147,7 @@ async def get_transports(token=Depends(auth_handler.auth_wrapper)):
     if not auth_handler.get_session(token):
         raise HTTPException(status_code=440, detail='Session has expired')
 
-    trans = await db.fetch_all(
-        "SELECT t._id, t.name, from_, to_, drivers, cargo, "
-        "total, t.state, who_added.name as addedby, added, lastmodified, who_mod.name as modifiedby "
-        "FROM transports as t "
-        "JOIN admins AS who_added ON t.addedBy = who_added._id "
-        "JOIN admins AS who_mod ON t.modifiedBy = who_mod._id;"
-    )
+    trans = await db.fetch_all(sql_queries.GET_TRANSPORTS)
     data = []
     for t in trans:
         t = dict(t)

@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS drivers (
     _id serial PRIMARY KEY,
 	firstName varchar ( 50 ) NOT NULL,
 	lastName varchar ( 50 ) NOT NULL,
-	phone varchar ( 50 ) NOT NULL,
+	phone varchar ( 50 )  NOT NULL,
 	email varchar ( 50 ) NOT NULL,
 	addedBy INTEGER REFERENCES admins(_id),
     added TIMESTAMP NOT NULL,
@@ -91,7 +91,7 @@ VALUES (
 INSERT INTO drivers
 	(firstName, lastName, phone, email, addedBy, added, lastModified, modifiedBy)
 VALUES (
-	'Random', 'Dude','1122334455', 'qwert@asdad.com', 1, now(), now(), 1
+	'Random', 'Dude','112233445', 'qwert@asdad.com', 1, now(), now(), 1
 );
 
 INSERT INTO drivers

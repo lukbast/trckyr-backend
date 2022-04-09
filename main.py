@@ -106,7 +106,6 @@ async def new_cargo(token=Depends(auth_handler.auth_wrapper),
         raise HTTPException(status_code=440, detail='Session has expired')
 
     uid = auth_handler.get_session(token)
-
     values = {"name": name, "wth": weight, "wunit": weightunit,
               "qty": quantity, "qunit": quantityunit, "info": info, "uid": uid}
     await db.execute(query=sql_queries.NEW_CARGO, values=values)
@@ -114,11 +113,27 @@ async def new_cargo(token=Depends(auth_handler.auth_wrapper),
     return {"data": data}
 
 
+@app.patch("/cargos/{_id}")
+async def edit_cargo(_id: int, token=Depends(auth_handler.auth_wrapper),
+                     name: str = Form(''),
+                     weight: int = Form(0), weightunit: str = Form(''),
+                     quantity: int = Form(0), quantityunit: str = Form(''),
+                     info: str = Form(0)
+                     ):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+    uid = auth_handler.get_session(token)
+    values = {'name': name, 'w': weight, "wunit": weightunit,
+              'q': quantity, 'qunit': quantityunit, 'uid': uid, 'info': info, "id": _id}
+    await db.execute(sql_queries.UPDATE_CARGO, values)
+    data = await db.fetch_all(sql_queries.GET_CARGOS)
+    return {'data': data}
+
+
 @app.get("/drivers")
-async def get_drivers():
-    # token = auth_handler.auth_wrapper
-    # if not auth_handler.get_session(token):
-    #     raise HTTPException(status_code=440, detail='Session has expired')
+async def get_drivers(token=Depends(auth_handler.auth_wrapper)):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
 
     data = await db.fetch_all(sql_queries.GET_DRIVERS)
 
@@ -126,18 +141,33 @@ async def get_drivers():
 
 
 @app.post("/drivers")
-async def new_driver(token= Depends(auth_handler.auth_wrapper),
+async def new_driver(token=Depends(auth_handler.auth_wrapper),
                      firstname: str = Form(''),
                      lastname: str = Form(''),
                      phone: str = Form(''),
                      email: str = Form('')
                      ):
-
     if not auth_handler.get_session(token):
         raise HTTPException(status_code=440, detail='Session has expired')
     uid = auth_handler.get_session(token)
     values = {"fname": firstname, "lname": lastname, "ph": phone, "email": email, "uid": uid}
     await db.execute(query=sql_queries.NEW_DRIVER, values=values)
+    data = await db.fetch_all(sql_queries.GET_DRIVERS)
+    return {"data": data}
+
+
+@app.patch("/drivers/{_id}")
+async def edit_driver(_id: int, token=Depends(auth_handler.auth_wrapper),
+                      firstname: str = Form(''),
+                      lastname: str = Form(''),
+                      phone: str = Form(''),
+                      email: str = Form('')
+                      ):
+    if not auth_handler.get_session(token):
+        raise HTTPException(status_code=440, detail='Session has expired')
+    uid = auth_handler.get_session(token)
+    values = {"fname": firstname, "lname": lastname, "ph": phone, "email": email, "uid": uid, 'id': _id}
+    await db.execute(query=sql_queries.UPDATE_DRIVERS, values=values)
     data = await db.fetch_all(sql_queries.GET_DRIVERS)
     return {"data": data}
 

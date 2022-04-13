@@ -50,3 +50,14 @@ UPDATE_CARGO = "UPDATE cargos SET name=:name, weight=:w, weightunit=:wunit, " \
                "modifiedby=:uid  WHERE _id = :id;"
 UPDATE_DRIVERS = "UPDATE drivers SET firstname=:fname, lastname=:lname, " \
                  "phone=:ph, email=:email, lastmodified= now(), modifiedby= :uid WHERE _id = :id;"
+
+NEW_TRANSPORT = "INSERT INTO transports" \
+                "( name, from_, to_, drivers, cargo, total, state, addedby, added, lastmodified, modifiedby) " \
+                "VALUES ( :name, :from, :to, :drivers, :cargo, :total, " \
+                "'Waiting for dispatch', :uid, now(), now(), :uid " \
+                "); "
+
+INITIAL_STATUS = "INSERT INTO statuses " \
+                 "( transportID, state, begginingOfState, endOfState, duration, remaining, eta, coordinates) " \
+                 "VALUES ( :id, 'Waiting for dispatch', now(), null, null, :rem_dist, " \
+                 ":eta, :from_coors );"

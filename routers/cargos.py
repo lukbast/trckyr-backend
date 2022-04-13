@@ -8,8 +8,6 @@ auth_handler = AuthHandler()
 
 @router.get("/cargos")
 async def get_cargos(token=Depends(auth_handler.auth_wrapper)):
-    if not auth_handler.get_session(token):
-        raise HTTPException(status_code=440, detail='Session has expired')
 
     data = await db_conn.fetch_all(GET_CARGOS)
 
@@ -23,8 +21,6 @@ async def new_cargo(token=Depends(auth_handler.auth_wrapper),
                     quantity: int = Form(0), quantityunit: str = Form(''),
                     info: str = Form('')
                     ):
-    if not auth_handler.get_session(token):
-        raise HTTPException(status_code=440, detail='Session has expired')
 
     uid = auth_handler.get_session(token)
     values = {"name": name, "wth": weight, "wunit": weightunit,
@@ -41,9 +37,8 @@ async def edit_cargo(_id: int, token=Depends(auth_handler.auth_wrapper),
                      quantity: int = Form(0), quantityunit: str = Form(''),
                      info: str = Form('')
                      ):
-    if not auth_handler.get_session(token):
-        raise HTTPException(status_code=440, detail='Session has expired')
-    uid = auth_handler.get_session(token)
+
+    uid = auth_handler.decode_token(token)
     values = {'name': name, 'w': weight, "wunit": weightunit,
               'q': quantity, 'qunit': quantityunit, 'uid': uid, 'info': info, "id": _id}
     await db_conn.execute(UPDATE_CARGO, values)

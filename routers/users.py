@@ -1,4 +1,4 @@
-from fastapi import Form, HTTPException, Depends, APIRouter
+from fastapi import Form, HTTPException, APIRouter
 from auth import AuthHandler
 from db.db import *
 
@@ -21,26 +21,10 @@ async def login(username: str = Form(""), password: str = Form("")):
     values = {'username': username}
     user = await db_conn.fetch_one(query=query, values=values)
     hashed_password = auth_handler.get_password_hash(password)
-
+    print(user.get("_id"), type(user.get("_id")))
     if user:
         if hashed_password == user.get('password'):
-            token = auth_handler.encode_token(username)
-            auth_handler.create_session(token, user.get('_id'))
+            token = auth_handler.encode_token(user.get('_id'))
             return {'token': token, 'username': user.get('name')}
 
     raise HTTPException(status_code=401, detail='Invalid username and/or password.')
-
-
-@router.get("/user/login", status_code=200)
-async def login_with_session(token=Depends(auth_handler.auth_wrapper)):
-    session = auth_handler.get_session(token)
-    if session:
-        return {'session': True}
-
-    raise HTTPException(status_code=440, detail='Session has ben expired')
-
-
-@router.post("/user/logout", status_code=200)
-async def logout(token=Depends(auth_handler.auth_wrapper)):
-    auth_handler.remove_session(token)
-    return {"logged_out": True}

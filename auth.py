@@ -39,8 +39,8 @@ class AuthHandler:
         except jwt.InvalidTokenError as e:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-    def create_session(self, key, id):
-        self.users[key] = id
+    def create_session(self, key, id_):
+        self.users[key] = id_
 
     def remove_session(self, key):
         self.users.pop(key, None)

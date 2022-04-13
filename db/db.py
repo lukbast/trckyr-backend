@@ -1,3 +1,21 @@
+import databases
+from os import getenv
+
+
+def create_db_url(host: str, port: str, db_name: str, user: str,
+                  password: str):
+    return 'postgresql://{}:{}@{}:{}/{}'.format(
+        user, password, host, port, db_name)
+
+
+DB_URL = create_db_url(getenv("POSTGRES_URL"),
+                       getenv("PORT"),
+                       getenv("POSTGRES_DB"),
+                       getenv("POSTGRES_USER"),
+                       getenv("POSTGRES_PASSWORD"))
+
+db_conn = databases.Database(DB_URL)
+
 GET_CARGOS = "SELECT cargos._id, cargos.name, weight, weightUnit, quantity, " \
              "quantityUnit, info, who_added.name as addedBy, cargos.added,  " \
              "lastModified, who_mod.name as modifiedBy FROM cargos " \
@@ -28,6 +46,7 @@ NEW_DRIVER = "INSERT INTO drivers " \
              ":fname, :lname, :ph, :email, :uid, now(), now(), :uid " \
              ");"
 UPDATE_CARGO = "UPDATE cargos SET name=:name, weight=:w, weightunit=:wunit, " \
-               "quantity=:q, quantityunit=:qunit,info=:info lastmodified= now(), modifiedby=:uid  WHERE _id = :id;"
+               "quantity=:q, quantityunit=:qunit, info=:info, lastmodified=now(), " \
+               "modifiedby=:uid  WHERE _id = :id;"
 UPDATE_DRIVERS = "UPDATE drivers SET firstname=:fname, lastname=:lname, " \
                  "phone=:ph, email=:email, lastmodified= now(), modifiedby= :uid WHERE _id = :id;"
